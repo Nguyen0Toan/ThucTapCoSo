@@ -7,3 +7,6 @@ class IPv4:
 
     def broadcast(self):
         return str(self.network.broadcast_address)
+    
+    def network(self):
+        return str(self.network.network_address)

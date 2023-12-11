@@ -1,12 +1,30 @@
-import ipaddress
+import tkinter as tk
 
-network = ipaddress.IPv4Network("192.168.1.0/24")
-print("Network Address:", network.network_address)
-print("Broadcast Address:", network.broadcast_address)
-print("Number of Addresses:", (network.num_addresses) - 2)
-print("Prefix Length:", network.prefixlen)
-subnet_mask = ipaddress.IPv4Network(f"0.0.0.0/{network.prefixlen}", strict=False).network_address
-print("Network Mask:", subnet_mask)
-print("Hosts:")
-for ip in network.hosts():
-    print(ip)
+def process_input():
+    input_text = entry.get()
+    # Xử lý dữ liệu nhập vào, ví dụ:
+    result_label.config(text=f"Dữ liệu nhập vào: {input_text}")
+
+def create_entry_and_process():
+    global entry
+    global result_label
+
+    app = tk.Tk()
+    app.title("Lấy dữ liệu từ Entry")
+
+    # Tạo Entry
+    entry = tk.Entry(app)
+    entry.pack(pady=10)
+
+    # Tạo Button để kích hoạt xử lý
+    process_button = tk.Button(app, text="Xử lý", command=process_input)
+    process_button.pack(pady=10)
+
+    # Tạo Label để hiển thị kết quả
+    result_label = tk.Label(app, text="")
+    result_label.pack(pady=5)
+
+    app.mainloop()
+
+# Gọi hàm để tạo cửa sổ và xử lý dữ liệu từ Entry
+create_entry_and_process()
