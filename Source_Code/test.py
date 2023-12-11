@@ -1,30 +1,17 @@
-import tkinter as tk
+from ipwhois import IPWhois
+import ipaddress
 
-def process_input():
-    input_text = entry.get()
-    # Xử lý dữ liệu nhập vào, ví dụ:
-    result_label.config(text=f"Dữ liệu nhập vào: {input_text}")
+def get_ip_type(ip_address):
+    try:
+        # Kiểm tra xem địa chỉ IP có phải là địa chỉ public hay không
+        ip_type = IPWhois(ip_address).lookup_rdap()['asn']
+        return f"Địa chỉ IP {ip_address} là địa chỉ public (ASN: {ip_type})"
+    except Exception as e:
+        return f"Địa chỉ IP {ip_address} là địa chỉ private: {str(e)}"
 
-def create_entry_and_process():
-    global entry
-    global result_label
+# Nhập địa chỉ IPv4 cần kiểm tra
+ipv4_address = input("Nhập địa chỉ IPv4: ")
 
-    app = tk.Tk()
-    app.title("Lấy dữ liệu từ Entry")
-
-    # Tạo Entry
-    entry = tk.Entry(app)
-    entry.pack(pady=10)
-
-    # Tạo Button để kích hoạt xử lý
-    process_button = tk.Button(app, text="Xử lý", command=process_input)
-    process_button.pack(pady=10)
-
-    # Tạo Label để hiển thị kết quả
-    result_label = tk.Label(app, text="")
-    result_label.pack(pady=5)
-
-    app.mainloop()
-
-# Gọi hàm để tạo cửa sổ và xử lý dữ liệu từ Entry
-create_entry_and_process()
+# Kiểm tra và in kết quả
+result = get_ip_type(ipv4_address)
+print(result)

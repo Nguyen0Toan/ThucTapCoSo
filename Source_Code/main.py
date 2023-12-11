@@ -8,6 +8,7 @@ def create_main_window():
     app.title("CHƯƠNG TRÌNH TÌM CÁC LOẠI ĐỊA CHỈ IP")
     app.geometry("600x400")
     input_ipaddress(app)
+    result_address(app)
     app.mainloop() #chạy chương trình
 
 def input_ipaddress(app):
@@ -32,6 +33,7 @@ def check_input():
         if subnet_mask.isdigit():
             if 8 <= int(subnet_mask) < 30:
                 error_label.config(text="Địa chỉ IP hợp lệ", fg="green")
+                check_result_address()
             else:
                 error_label.config(text="Subnet mask hợp lệ phải nhỏ hơn 30 và lớn hơn hoặc bằng 8", fg="red")
         else:
@@ -40,12 +42,24 @@ def check_input():
         error_label.config(text='Bạn chưa nhập subnet mask cho IP', fg="red")
 
 def result_address(app):
-    Ipv4 = IPv4(entry.get())
-    broadcastip_label = tk.Label(app, text=f"Địa chỉ quảng bá của mạng là: {Ipv4.broadcast()}")
-    broadcastip_label.place(x=0, y=50)
+    global broadcastip_result_label
+    global networkip_result_label
+    broadcastip_label = tk.Label(app, text=f"Địa chỉ quảng bá của mạng là:")
+    broadcastip_label.place(x=0, y=60)
 
-    networkip_label = tk.Label(app, text=f"Địa chỉ mạng của mạng là: {Ipv4.network()}")
-    networkip_label.place(x=0, y=60)
+    networkip_label = tk.Label(app, text=f"Địa chỉ mạng của mạng là:")
+    networkip_label.place(x=0, y=90)
+
+    broadcastip_result_label = tk.Label(app, text="")
+    broadcastip_result_label.place(x=170,y=60)
+
+    networkip_result_label = tk.Label(app, text="")
+    networkip_result_label.place(x=150,y=90)
+
+def check_result_address():
+    Ipv4 = IPv4(entry.get())
+    broadcastip_result_label.config(text=f"{Ipv4.broadcast()}", fg="green")
+    networkip_result_label.config(text=f"{Ipv4.network()}", fg="green")
 
 def main():
     create_main_window()  
