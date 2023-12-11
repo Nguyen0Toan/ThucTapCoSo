@@ -10,3 +10,6 @@ class IPv4:
     
     def network(self):
         return str(self.network_ip.network_address)
+    
+    def multicast(self):
+        return self.network_ip.is_multicast

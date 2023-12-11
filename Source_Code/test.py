@@ -1,17 +1,35 @@
-from ipwhois import IPWhois
-import ipaddress
+def input_ipaddress(app):
+    global entry
+    global error_label
 
-def get_ip_type(ip_address):
-    try:
-        # Kiểm tra xem địa chỉ IP có phải là địa chỉ public hay không
-        ip_type = IPWhois(ip_address).lookup_rdap()['asn']
-        return f"Địa chỉ IP {ip_address} là địa chỉ public (ASN: {ip_type})"
-    except Exception as e:
-        return f"Địa chỉ IP {ip_address} là địa chỉ private: {str(e)}"
+    label = tk.Label(app, text="Nhập địa chỉ IP:")
+    label.place(x=0, y=10)
 
-# Nhập địa chỉ IPv4 cần kiểm tra
-ipv4_address = input("Nhập địa chỉ IPv4: ")
+    entry = tk.Entry(app, width=50)
+    entry.place(x=90, y=10)
 
-# Kiểm tra và in kết quả
-result = get_ip_type(ipv4_address)
-print(result)
+    button = tk.Button(app, text='Xử lý', command=check_and_process_input)
+    button.place(x=400, y=7)
+
+    error_label = tk.Label(app, text="")
+    error_label.place(x=90, y=35)
+
+def check_and_process_input():
+    if check_input():
+        check_result_address()
+
+def check_input():
+    user_input = entry.get()
+    if '/' in user_input:
+        ipaddress, subnet_mask = user_input.split('/')
+        if subnet_mask.isdigit():
+            if 8 <= int(subnet_mask) < 30:
+                error_label.config(text="Địa chỉ IP hợp lệ", fg="green")
+                return True
+            else:
+                error_label.config(text="Subnet mask hợp lệ phải nhỏ hơn 30 và lớn hơn hoặc bằng 8", fg="red")
+        else:
+            error_label.config(text="Bạn chưa nhập subnet mask cho IP", fg="red")
+    else:
+        error_label.config(text='Bạn chưa nhập subnet mask cho IP', fg="red")
+    return False

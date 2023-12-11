@@ -44,11 +44,15 @@ def check_input():
 def result_address(app):
     global broadcastip_result_label
     global networkip_result_label
+    global multicast_result_label
     broadcastip_label = tk.Label(app, text=f"Địa chỉ quảng bá của mạng là:")
     broadcastip_label.place(x=0, y=60)
 
     networkip_label = tk.Label(app, text=f"Địa chỉ mạng của mạng là:")
     networkip_label.place(x=0, y=90)
+
+    multicast_label = tk.Label(app, text="Địa chỉ multicast của mạng là:")
+    multicast_label.place(x=0, y=120)
 
     broadcastip_result_label = tk.Label(app, text="")
     broadcastip_result_label.place(x=170,y=60)
@@ -56,10 +60,17 @@ def result_address(app):
     networkip_result_label = tk.Label(app, text="")
     networkip_result_label.place(x=150,y=90)
 
+    multicast_result_label = tk.Label(app, text="")
+    multicast_result_label.place(x=160, y=120)
+
 def check_result_address():
     Ipv4 = IPv4(entry.get())
     broadcastip_result_label.config(text=f"{Ipv4.broadcast()}", fg="green")
     networkip_result_label.config(text=f"{Ipv4.network()}", fg="green")
+    if(Ipv4.multicast() == True):
+        multicast_result_label.config(text=f"{str(Ipv4.multicast())}", fg="green")
+    else:
+        multicast_result_label.config(text="Không có địa chỉ multicast", fg="red")
 
 def main():
     create_main_window()  
