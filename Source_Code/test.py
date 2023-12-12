@@ -1,35 +1,12 @@
-def input_ipaddress(app):
-    global entry
-    global error_label
+import ipaddress
 
-    label = tk.Label(app, text="Nhập địa chỉ IP:")
-    label.place(x=0, y=10)
+def ipv4_to_ipv6(ipv4_address):
+    ipv4_obj = ipaddress.IPv4Address(ipv4_address)
+    ipv6_mapped = ipaddress.IPv6Address(f"::ffff:{ipv4_obj}")
+    return str(ipv6_mapped)
 
-    entry = tk.Entry(app, width=50)
-    entry.place(x=90, y=10)
-
-    button = tk.Button(app, text='Xử lý', command=check_and_process_input)
-    button.place(x=400, y=7)
-
-    error_label = tk.Label(app, text="")
-    error_label.place(x=90, y=35)
-
-def check_and_process_input():
-    if check_input():
-        check_result_address()
-
-def check_input():
-    user_input = entry.get()
-    if '/' in user_input:
-        ipaddress, subnet_mask = user_input.split('/')
-        if subnet_mask.isdigit():
-            if 8 <= int(subnet_mask) < 30:
-                error_label.config(text="Địa chỉ IP hợp lệ", fg="green")
-                return True
-            else:
-                error_label.config(text="Subnet mask hợp lệ phải nhỏ hơn 30 và lớn hơn hoặc bằng 8", fg="red")
-        else:
-            error_label.config(text="Bạn chưa nhập subnet mask cho IP", fg="red")
-    else:
-        error_label.config(text='Bạn chưa nhập subnet mask cho IP', fg="red")
-    return False
+# Ví dụ sử dụng:
+ipv4_address = "192.0.2.1"
+ipv6_address = ipv4_to_ipv6(ipv4_address)
+print(f"IPv4: {ipv4_address}")
+print(f"IPv6: {ipv6_address}")
