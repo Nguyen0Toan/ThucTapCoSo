@@ -8,27 +8,26 @@ font_label = ("Helvetica", 10, "bold")
 def create_main_window():
     app = tk.Tk()
     app.title("CHƯƠNG TRÌNH TÌM CÁC LOẠI ĐỊA CHỈ IP")
-    app.geometry("600x400")
+    app.geometry("500x400")
 
     #Frame
     frame = tk.Frame(app)
     frame.pack()
 
     #user input frame
-    user_input_frame = tk.LabelFrame(frame, text="User Input")
+    user_input_frame = tk.LabelFrame(frame, text="User Input", font=font_label)
     user_input_frame.grid(row=0, column=0)
 
     #user output frame
-    user_output_frame = tk.LabelFrame(frame, text="Result")
+    user_output_frame = tk.LabelFrame(frame, text="Result", font=font_label)
     user_output_frame.grid(row=1, column=0)
     
     user_input(user_input_frame)
+    user_output(user_output_frame)
     app.mainloop()
     
 def user_input(input_frame):
     global input_entry
-    global error_label
-
     #xử lý nhập dữ liệu của IP
     input_label = tk.Label(input_frame, text="IP Address", font=font_label)
     input_label.grid(row=0, column=0, sticky="w")
@@ -70,8 +69,53 @@ def input_entry_leave(event):
     else:
         input_entry.config(fg="black", bg="white")
 
+def check_input():
+    
+
+#hiển thị kết quả
+def user_output(output_frame):
+    #Thông tin của IP
+    info_label = tk.Label(output_frame, text="THÔNG TIN CỦA MẠNG", font=("Helvetica", 15, "bold"))
+    info_label.grid(row=0, column=0, columnspan=3, sticky="ew")
+
+    #dữ liệu
+    info_user_output(output_frame, "IP Address:", "192.168.2.3", 1, 0)
+    info_user_output(output_frame, "Network:", "192.168.2.0", 2, 0)
+    #info_user_output(output_frame, "Host MIN:", ,)
+    #xử lí padding của các phần tử trong user_input_frame
+    for widget in output_frame.winfo_children():
+        widget.grid_configure(padx=5, pady=3)
+
+def info_user_output(output_frame, info, address, rows, cols):
+    #Hiển thị loại thông tin 
+    info_label = tk.Label(output_frame, text=info, font=font_label)
+    info_label.grid(row=rows, column=cols, sticky="w")
+
+    # Dữ liệu của IP
+    address_label = tk.Label(output_frame, text=address, fg="blue", font=("Helvetica", 10))
+    address_label.grid(row=rows, column=cols + 1)
+
+    # Mã nhị phân
+    address_binary_label = tk.Label(output_frame, text=f"{ipv4_to_binary(address)}", fg="green", font=("Helvetica, 10"))
+    address_binary_label.grid(row=rows, column=cols + 2)
+
+#Hàm chuyển đổi mã nhị phân
+def ipv4_to_binary(address):
+    #Chia địa chỉ thành các thành phần 
+    components = map(int, address.split('.'))
+
+    #Chuyển đổi địa chỉ sang mã nhị phân
+    binary_components = [bin(component)[2:].zfill(8) for component in components]
+
+    #Kết hợp mã nhị phân để tạo địa chỉ IPv4 toàn cục
+    binary_address = '.'.join(binary_components)
+
+    return binary_address
+
 def main():
     create_main_window()
     
 if __name__ == '__main__':
     main()
+
+
