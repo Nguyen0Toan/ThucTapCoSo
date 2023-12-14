@@ -1,8 +1,13 @@
-import ipaddress
+def ipv4_to_binary(address):
+    #Chia địa chỉ thành các thành phần 
+    components = map(int, address.split('.'))
 
-def main():
-    ipv4 = ipaddress.ip_address("192.116.2.3.")
+    #Chuyển đổi địa chỉ sang mã nhị phân
+    binary_components = [bin(component)[2:].zfill(8) for component in components]
 
-    print(ipv4)
+    #Kết hợp mã nhị phân để tạo địa chỉ IPv4 toàn cục
+    binary_address = '.'.join(binary_components)
 
-main()
+    return binary_address
+
+print(ipv4_to_binary("192.168.2.3"))
