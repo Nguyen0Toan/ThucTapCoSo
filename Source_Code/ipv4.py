@@ -16,6 +16,9 @@ class IPv4:
     
     def host_max(self):
         return str(self.ip.broadcast_address - 1)
+    
+    def class_ipv4(self):
+        return self.ip.network_address.exploded.split(".")[0]
         
     def multicast(self):
         return self.ip.is_multicast
