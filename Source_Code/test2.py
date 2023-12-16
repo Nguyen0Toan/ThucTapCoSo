@@ -1,43 +1,26 @@
-import tkinter as tk
-from tkinter import ttk
+#!/usr/bin/env python3
+import ipaddress
 
-def create_combobox(frame):
-    global label_result
-    global combobox
-    # Label for the Combobox
-    label = tk.Label(frame, text="Select an option:")
-    label.grid(row=0, column=0, padx=5, pady=5)
+# get ip address 
+while True:
+    ip4str = input("Enter IPv4 (e.g., 9.254.253.252):")
+    try:
+        ip4 = ipaddress.IPv4Address(ip4str)
+    except ValueError:
+        print("invalid ip address. Try, again")
+    else:
+        break # got ip address
 
-    # Sample options for the Combobox
-    options = ["Option 1", "Option 2", "Option 3", "Option 4"]
+# convert ip4 to rfc 3056 IPv6 6to4 address
+# http://tools.ietf.org/html/rfc3056#section-2
+prefix6to4 = int(ipaddress.IPv6Address("2002::"))
+ip6 = ipaddress.IPv6Address(prefix6to4 | (int(ip4) << 80))
+print(ip6)
+assert ip6.sixtofour == ip4
 
-    # Combobox widget
-    combobox = ttk.Combobox(frame, values=options)
-    combobox.grid(row=0, column=1, padx=5, pady=5)
-
-    button =  tk.Button(frame, text="xử lý", command=show_label(frame))
-    button.grid(row=1, column=0, padx=5, pady=5)
-
-    label_result = tk.Label(frame, text="")
-    label_result.grid(row=2, column=0, padx=5, pady=5)
-    # Set a default value (optional)
-    combobox.set("Option 1")
-
-def show_label(frame):
-    label_result.config(frame, text=combobox.get())
-    label_result.grid(row=2, column=0, padx=5, pady=5)
-
-# Example usage in a Tkinter application
-def main():
-    app = tk.Tk()
-    app.title("Combobox Example")
-    
-    frame = tk.Frame(app)
-    frame.pack(padx=10, pady=10)
-    
-    create_combobox(frame)
-
-    app.mainloop()
-
-if __name__ == "__main__":
-    main()
+# convert ip4 to a base 10
+print(int(ip4))
+# convert ip4 to binary (0b)
+print(bin(int(ip4)))
+# convert ip4 to hex (0x)
+print(hex(int(ip4)))

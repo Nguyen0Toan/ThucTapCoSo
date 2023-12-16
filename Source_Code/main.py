@@ -9,7 +9,7 @@ font_normal = ("Helvetica", 10)
 def create_main_window():
     app = tk.Tk()
     app.title("CHƯƠNG TRÌNH TÌM CÁC LOẠI ĐỊA CHỈ IP")
-    app.geometry("500x400")
+    app.geometry("600x400")
 
     #Frame
     frame = tk.Frame(app)
@@ -52,7 +52,7 @@ def user_input(input_frame):
     
     #xử lý lỗi nhập dữ liệu và phát hiện địa chỉ
     error_label = tk.Label(input_frame, text="", font=font_normal)
-    error_label.grid(row=2, column=0, columnspan=2, sticky="w")
+    error_label.grid_forget()
 
     #xử lý dữ liệu bằng button
     handle_button = tk.Button(input_frame, text='Xử lý dữ liệu', font=font_label, command=lambda: check_input(input_entry.get()))
@@ -91,23 +91,30 @@ def check_ipv4(address):
 
 #kiểm tra kết quả của input
 def check_input(address):
+    error_label.grid(row=2, column=0, columnspan=2, sticky="w")
     if(address == "Example: 192.168.2.3"):
-        error_label.config(text="Địa chỉ IP không được để trống", fg="red", font=font_normal)
+        error_label.config(text="Địa chỉ IP không được để trống", fg="red")
     else:
         if(check_alphabet(address) == True):
             if(check_ipv4(address) == True):
                 ip_version4 = address
+                ipv4_instance = IPv4(address)
                 user_output_result(ip_version4)
-                error_label.config(text="Địa chỉ hợp lệ", fg="green", font=font_normal)
+                if(ipv4_instance.multicast() == True):
+                    error_label.config(text="Đây là địa chỉ Multicast", fg="green")
+                elif(ipv4_instance.private() == True):
+                    error_label.config(text="Đây là địa chỉ Private", fg="green")
+                else:
+                    error_label.config(text="Địa chỉ hợp lệ", fg="green")
             else:
-                error_label.config(text="Địa chỉ IP không hợp lệ xin mời nhập lại", fg="red", font=font_normal)
+                error_label.config(text="Địa chỉ IP không hợp lệ xin mời nhập lại", fg="red")
         else:
-            error_label.config(text="Không được nhập kí tự xin mời nhập lại", fg="red", font=font_normal)
+            error_label.config(text="Không được nhập kí tự xin mời nhập lại", fg="red")
 
 #hiển thị kết quả
 def user_output(output_frame):
     #Thông tin của IP
-    info_label = tk.Label(output_frame, text="THÔNG TIN CỦA MẠNG", font=("Helvetica", 15, "bold"))
+    info_label = tk.Label(output_frame, text="THÔNG TIN CỦA MẠNG", font=("Sonata", 15, "bold"), bg="#013DC4", fg="white")
     info_label.grid(row=0, column=0, columnspan=3, sticky="ew")
 
     #Hiển thị các loại thông tin của địa chỉ
@@ -117,7 +124,7 @@ def user_output(output_frame):
     global host_min_label, host_min_binary_label
     global host_max_label, host_max_binary_label
     global broadcast_label, broadcast_binary_label
-    global class_result_label
+    global class_result_label, ipv6_result_label
 
     #IP Address
     info_user_output_label(output_frame, "IP Address:", 1, 0)
@@ -160,12 +167,16 @@ def user_output(output_frame):
     broadcast_binary_label.grid(row=5, column=2)
 
     #Class IP
-    class_label = tk.Label(output_frame, text="IP Class:", font=font_label)
-    class_label.grid(row=6, column=0, sticky="w")
+    info_user_output_label(output_frame, "IP Class:", 6, 0)
 
     class_result_label = tk.Label(output_frame, text="", fg="blue", font=("Helvetica", 10))
     class_result_label.grid(row=6, column=1, sticky="w")
 
+    #IPv6
+    info_user_output_label(output_frame, "IPv6:", 7, 0)
+
+    ipv6_result_label = tk.Label(output_frame, text="", fg="blue", font=("Helvetica", 10))
+    ipv6_result_label.grid(row=7, column=1, columnspan=2, sticky="ew")
 
     #xử lí padding của các phần tử trong user_input_frame
     for widget in output_frame.winfo_children():
@@ -186,6 +197,7 @@ def user_output_result(address):
     broadcast_ip = ipv4_instance.broadcast()
     host_min_ip = ipv4_instance.host_min()
     host_max_ip = ipv4_instance.host_max()
+    ipv6 = ipv4_instance.ipv4_to_ipv6()
 
     #Hiển thị kết quả của dữ liệu
     address_label.config(text=address)
@@ -204,6 +216,7 @@ def user_output_result(address):
     broadcast_binary_label.config(text=ipv4_to_binary(broadcast_ip))
 
     check_class(ip)
+    ipv6_result_label.config(text=ipv6)
 
 #Hàm chuyển đổi mã nhị phân
 def ipv4_to_binary(address):
@@ -222,11 +235,11 @@ def ipv4_to_binary(address):
 def check_class(address):
     ipv4_instance = IPv4(address)
     class_ip = int(ipv4_instance.class_ipv4())
-    if(0 >= class_ip <= 127):
+    if(0 <= class_ip <= 127):
         class_result_label.config(text="A")
-    elif(128 >= class_ip <= 191):
+    elif(128 <= class_ip <= 191):
         class_result_label.config(text="B")
-    elif(192 >= class_ip <= 223):
+    elif(192 <= class_ip <= 223):
         class_result_label.config(text="C")
 
 def main():
