@@ -4,6 +4,7 @@ class IPv4:
     def __init__(self, address):
         self.address = address
         self.ipv4 = ipaddress.IPv4Network(address, strict=False)
+        self.ip = str(self.ipv4.network_address)
         self.ipv6 = ipaddress.IPv6Address("::" + str(self.ipv4.network_address))
 
     def broadcast(self):
@@ -31,3 +32,14 @@ class IPv4:
         ipv6_format = format(self.ipv6, "_X").replace("_", ":")
         return str(ipv6_format)
     
+    def subnetting(self):
+        subnet_prefix = 1
+        subnetmask = int(self.ipv4.prefixlen)
+        if 8 <= subnetmask < 16:
+            subnet_prefix = 8
+        elif 16 <= subnetmask < 24:
+            subnet_prefix = 16
+
+        base_network = ipaddress.IPv4Network(f"{self.ip}/{subnet_prefix}", strict=False)
+        subnets = list(base_network.subnets(new_prefix=subnetmask))
+        return subnets

@@ -1,16 +1,17 @@
 import ipaddress
 
-def ipv4_to_ipv6(ipv4_address):
-    # Tạo một đối tượng IPv6Address từ địa chỉ IPv4
-    ipv6_address = ipaddress.IPv6Address("::"+ ipv4_address)
-    return ipv6_address
+def subnet_list(base_ip, subnet_prefix):
+    base_network = ipaddress.IPv4Network(f"{base_ip}/{subnet_prefix}", strict=False)
+    subnets = list(base_network.subnets(new_prefix=20))
+    return subnets
 
-# Nhập địa chỉ IPv4 cần chuyển đổi
-ipv4_address = input("Nhập địa chỉ IPv4: ")
+# Địa chỉ IP cơ sở và độ dài tiền tố của subnet
+base_ip = "192.168.2.3"
+subnet_prefix = 16
 
-# Thực hiện chuyển đổi và in kết quả
-ipv6_address = ipv4_to_ipv6(ipv4_address)
-formatted_ip = format(ipv6_address, '_X').replace("_",":")
+# Lấy danh sách tất cả các subnet
+subnets = subnet_list(base_ip, subnet_prefix)
 
-print(formatted_ip)
-
+# Hiển thị tất cả các subnet
+for subnet in subnets:
+    print(subnet)
