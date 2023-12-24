@@ -5,11 +5,8 @@ class IPv4:
         self.address = address
         self.ipv4 = ipaddress.IPv4Network(address, strict=False)
         self.ip = str(self.ipv4.network_address)
-        self.ipv6 = ipaddress.IPv6Address("::" + str(self.ipv4.network_address))
+        self.ipv6 = ipaddress.IPv6Address("::ffff:" + str(self.ipv4.network_address))
 
-    def broadcast(self):
-        return str(self.ipv4.broadcast_address)
-    
     def network(self):
         return str(self.ipv4.network_address)
     
@@ -18,6 +15,9 @@ class IPv4:
     
     def host_max(self):
         return str(self.ipv4.broadcast_address - 1)
+    
+    def broadcast(self):
+        return str(self.ipv4.broadcast_address)
     
     def class_ipv4(self):
         return self.ipv4.network_address.exploded.split(".")[0]
@@ -39,7 +39,8 @@ class IPv4:
             subnet_prefix = 8
         elif 16 <= subnetmask < 24:
             subnet_prefix = 16
-
-        base_network = ipaddress.IPv4Network(f"{self.ip}/{subnet_prefix}", strict=False)
+        elif 24 <= subnetmask < 32:
+            subnet_prefix = 24
+        base_network = ipaddress.IPv4Network(f"{self.ipv4.network_address}/{subnet_prefix}", strict=False)
         subnets = list(base_network.subnets(new_prefix=subnetmask))
         return subnets
