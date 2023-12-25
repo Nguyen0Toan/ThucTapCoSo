@@ -19,21 +19,18 @@ def check_alphabet(address):
 #kiểm tra IPv4
 def check_ipv4(address):
     try:
-        ipaddress.ip_address(address)
-        return True
+        ip_obj = ipaddress.ip_address(address)
+        return isinstance(ip_obj, ipaddress.IPv4Address)
     except ValueError:
         return False
     
-#Kiểm tra lớp của địa chỉ IPv4
-def check_class(address):
-    ipv4 = IPv4(address)
-    class_ip = int(ipv4.class_ipv4())
-    if(0 <= class_ip <= 127):
-        return "A"
-    elif(128 <= class_ip <= 191):
-        return "B"
-    elif(192 <= class_ip <= 223):
-        return "C"
+#kiểm tra IPv6
+def check_ipv6(address):
+    try:
+        ip_obj = ipaddress.ip_address(address)
+        return isinstance(ip_obj, ipaddress.IPv6Address)
+    except ValueError:
+        return False
     
 #kiểm tra sự kiện click
 def handle_entry(event, action, label, ex):
@@ -54,11 +51,11 @@ def info_user_label(frame, info, rows, cols):
 #xử lý hiển thị thông tin kết quả của subnetting
 def info_subnetting_label(frame, info, rows, cols):
     info_label = tk.Label(frame, text=info, font=("Helvetica", 10, "bold"), fg="blue")
-    info_label.grid(row=rows, column=cols)
+    info_label.grid(row=rows, column=cols, sticky="w")
 
 #xử lý ẩn hiện frame
 def toogle_frame(frame, rows, cols, color):
     if color == "green":
-        frame.grid(row=rows, column=cols, sticky="w")
+        frame.grid(row=rows, column=cols, sticky="nw")
     else:
         frame.grid_forget()
