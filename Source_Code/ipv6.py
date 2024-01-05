@@ -14,13 +14,16 @@ class IPv6:
         return self.ipv6.ip.is_multicast
     
     def unicast(self):
-        return all(
-            not getattr(self.ipv6.ip, f"is_{attr}")()
-            for attr in ["multicast", "unspecified", "loopback", "link_local", "site_local", "sitelocal", "multicast", "reserved"]
-        )
-    
-    def anycast(self):
-        return self.ipv6.ip.is_multicast and not self.ipv6.ip.is_reserved
+        try:
+            return (
+                not self.ipv6.ip.is_global and
+                not self.ipv6.ip.is_multicast and
+                not self.ipv6.ip.is_reserved and
+                not self.ipv6.ip.is_link_local and
+                not self.ipv6.ip.is_site_local
+            )
+        except ipaddress.AddressValueError:
+            return False
     
     def ipv6_to_binary(self):
         binary_ipv6 = bin(int(self.ipv6))[2:]

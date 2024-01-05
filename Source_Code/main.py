@@ -307,11 +307,9 @@ def check_input_ipv6(address, label, example, combo):
             ipv6_instance = IPv6(f"{address}/{combo}")
             ipv6_ouput_result(address, combo)
             if(ipv6_instance.multicast()):
-                label.config("Đây là địa chỉ Multicast", fg="green")
-            elif(ipv6_instance.anycast()):
-                label.config("Đây là địa chỉ Anycast", fg="green")
+                label.config(text="Đây là địa chỉ Multicast", fg="green")
             elif(ipv6_instance.unicast()):
-                label.config("Đây là địa chỉ Unicast", fg="green")
+                label.config(text="Đây là địa chỉ Unicast", fg="green")
             else:
                 label.config(text="Địa chỉ hợp lệ", fg="green")
         else:

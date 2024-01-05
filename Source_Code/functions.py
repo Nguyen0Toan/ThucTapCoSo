@@ -20,10 +20,11 @@ def check_ipv4(address):
 #kiểm tra IPv6
 def check_ipv6(address):
     try:
-        ip_obj = ipaddress.ip_address(address)
-        return isinstance(ip_obj, ipaddress.IPv6Address)
-    except ValueError:
+        ipaddress.IPv6Address(address)
+        return True
+    except ipaddress.AddressValueError:
         return False
+
 
 #xử lý hiển thị thông tin kết quả
 def info_user_label(frame, info, rows, cols):
