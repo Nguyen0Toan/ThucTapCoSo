@@ -1,7 +1,6 @@
 import tkinter as tk
-from tkinter import ttk
 import functions as func
-import webbrowser
+from tkinter import ttk
 from ipv4 import *
 from ipv6 import *
 from subnet import *
@@ -12,45 +11,52 @@ font_normal = ("Helvetica", 10)
 
 #frame tạo chương trình với thanh lăn chuột
 def scrollbar_window(app):
-    main_frame = tk.Frame(app)
-    main_frame.pack(fill=tk.BOTH, expand=1)
+    global canvas
+    # tạo thanh cuộn bên phải (lên xuống), bên dưới (trái phải)
+    scrollbar_y = ttk.Scrollbar(app, orient=tk.VERTICAL)
+    scrollbar_y.grid(row=0, column=1, sticky="ns")
+    scrollbar_x = ttk.Scrollbar(app, orient=tk.HORIZONTAL)
+    scrollbar_x.grid(row=1, column=0, sticky="ew")
 
-    canvas = tk.Canvas(main_frame)
-    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+    canvas = tk.Canvas(app, yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+    canvas.grid(row=0, column=0, sticky="nsew")
 
-    scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=canvas.yview)
-    scrollbar.pack(side=tk.LEFT, fill="y")
+    scrollbar_y.config(command=canvas.yview)
+    scrollbar_x.config(command=canvas.xview)
 
-    canvas.configure(yscrollcommand=scrollbar.set)
-    canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    # tạo một Frame để chứa nội dung
+    main_frame = tk.Frame(canvas)
+    canvas.create_window((10, 10), window=main_frame, anchor="nw")
 
-    second_frame = tk.Frame(canvas)
-    second_frame.pack(expand="true", fill="both")
+    # thiết lập thay đổi kích thước của cửa sổ
+    app.bind("<Configure>", lambda event, canvas=canvas: func.on_configure(event, canvas))
 
-    canvas.create_window((10,10), window=second_frame, anchor="nw")
-    main_window(second_frame)
+    # thêm sự kiện cuộn chuột trên Canvas
+    canvas.bind("<MouseWheel>", lambda event, canvas=canvas: func.on_mousewheel_vertical(event, canvas))
+    canvas.bind("<Shift-MouseWheel>", lambda event, canvas=canvas: func.on_mousewheel_horizontal(event, canvas))  
+
+    app.grid_rowconfigure(0, weight=1)
+    app.grid_columnconfigure(0, weight=1)
     
-#frame chính chứa toàn bộ nội dung chương trình
+    main_window(main_frame)
+
+#màn hình chính
 def main_window(main_frame):
     global ipv4_output_frame, ipv6_output_frame
     global subnetting_output_frame
-    global sup_subnetting_frame, main_subnetting_frame
 
     #documents frame
     documents_frame = tk.LabelFrame(main_frame, text="Tài Liệu Tham Khảo", font=font_label, bg="#008170", fg="white")
-    documents_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-
+    documents_frame.grid(row=0, column=0, rowspan=3, sticky="nsew")
+    documents_input_frame = tk.Frame(documents_frame)
+    documents_input_frame.grid(row=0, column=0, sticky="nw", padx=10, pady=20)
+    
     #ipv4 input, output frame
-    ipv4_input_frame = tk.LabelFrame(main_frame, text="IPv4 Input", font=font_label, )
+    ipv4_input_frame = tk.LabelFrame(main_frame, text="IPv4 Input", font=font_label)
     ipv4_input_frame.grid(row=0, column=1, sticky="nw")
 
     ipv4_output_frame = tk.LabelFrame(main_frame, text="IPv4 Result", font=font_label)
     subnetting_output_frame = tk.LabelFrame(main_frame, text="IPv4 Subnetting", font=font_label)
-    main_subnetting_frame = tk.Frame(subnetting_output_frame)
-    main_subnetting_frame.grid(row=0, column=0)
-    sup_subnetting_frame = tk.Frame(subnetting_output_frame)
-    sup_subnetting_frame.grid(row=1, column=0)
-
 
     #ipv6 input, output frame
     ipv6_input_frame = tk.LabelFrame(main_frame, text="IPv6 Input", font=font_label)
@@ -64,49 +70,40 @@ def main_window(main_frame):
     ipv6_output_frame.grid_forget()
     subnetting_output_frame.grid_forget()
 
-    documents(documents_frame)
+    documents_input(documents_input_frame)
     ipv4_input(ipv4_input_frame)
     ipv6_input(ipv6_input_frame)
     ipv4_output(ipv4_output_frame)
     ipv6_output(ipv6_output_frame)
-    subnetting_output(main_subnetting_frame)
+    subnetting_output(subnetting_output_frame)
 
 #xử lý tài liệu tham khảo
-def documents(document_frame):
-    global links
-    global link_listbox
-    links={
-        "Internet Protocol version 4(IPv4)": "https://en.wikipedia.org/wiki/Internet_Protocol_version_4",
-        "Broadcast Address": "https://en.wikipedia.org/wiki/Broadcast_address",
-        "Network Address": "https://en.wikipedia.org/wiki/Network_address",
-        "Multicast Address": "https://en.wikipedia.org/wiki/Multicast_address",
-        "Internet Protocol version 6(IPv6)": "https://en.wikipedia.org/wiki/IPv6",
-        "Subnet": "https://en.wikipedia.org/wiki/Subnet",
-        "Classful network": "https://en.wikipedia.org/wiki/Classful_network",
-        "Private network": "https://en.wikipedia.org/wiki/Private_network",
-    }
+def documents_input(documents_frame):
+    #file dữ liệu
+    file_path = "information.txt"
+    data_list = func.read_file(file_path)
 
-    link_listbox = tk.Listbox(document_frame, selectmode=tk.SINGLE, font=font_normal, fg="blue", width=30)
-    link_listbox.grid(row=0, column=0, sticky="nw")
-    for link in links:
-        link_listbox.insert(tk.END, link)
+    #tạo các label chứa thông tin
+    for i, data in enumerate(data_list):
+        key = data.split(":")[0].strip()
+        label = tk.Label(documents_frame, text=f"{key}", font=font_normal, fg="#007bff", cursor="hand2", anchor="w", width=25)
+        label.grid(row=i, column=0, sticky="w")
+        label.bind("<Button-1>", lambda event, index=i, data_file=data_list, title=key: show_documentation(event, index, data_file, title))
 
-    link_listbox.bind("<<ListboxSelect>>", show_documentation)
-    document_frame.configure(padx=10, pady=10)
-    document_frame.bind("<Configure>", lambda event, lb=link_listbox: on_frame_resize(event, lb))
+    for widget in documents_frame.winfo_children():
+        widget.grid_configure(padx=3, pady=5)
 
-#sự kiện đường dẫn đến tài liệu
-def show_documentation(event):
-    selected_index = link_listbox.curselection()
-    if selected_index:
-        selected_index = int(selected_index[0])
-        selected_link = list(links.values())[selected_index]
-        webbrowser.open(selected_link)
-
-def on_frame_resize(event, listbox):
-    new_height = event.height  
-    new_listbox_height = new_height - 20  
-    listbox.config(height=int(new_listbox_height / 20))
+#sự kiện hiển thị nội dung tài liệu
+def show_documentation(event, data_index, file, title_popup):
+    try:
+        value = file[data_index].split(":")[1].strip()
+        popup_window = tk.Toplevel(app)
+        popup_window.title(f"{title_popup}")
+        #label hiển thị thông tin
+        label = tk.Label(popup_window, text=value, font=font_label, wraplength=350)
+        label.grid(sticky="w", padx=10, pady=20)
+    except IndexError:
+        label.config(text="Chỉ số không hợp lệ.")
 
 #xử lý nhập của ipv4
 def ipv4_input(ipv4_frame):
@@ -131,7 +128,7 @@ def ipv4_input(ipv4_frame):
     error_ipv4_label = tk.Label(ipv4_frame, text="", font=font_normal)
 
     #xử lý dữ liệu bằng button
-    handle_button = tk.Button(ipv4_frame, text='Xử lý dữ liệu', font=font_label, command=lambda: check_input_ipv4(input_entry.get(), error_ipv4_label, example, subnet_combobox.get()))
+    handle_button = tk.Button(ipv4_frame, text='Xử lý dữ liệu', cursor = "hand2", font=font_label, command=lambda: check_input_ipv4(input_entry.get(), error_ipv4_label, example, subnet_combobox.get()))
     handle_button.grid(row=3, column=0, columnspan=2, sticky="ew")
 
     #xử lí padding của các phần tử trong ipv4_input_frame
@@ -150,11 +147,13 @@ def check_input_ipv4(address, label, example, combo):
     else:
         if(func.check_alphabet(address) == True):
             if(func.check_ipv4(address) == True):
-                ipv4_instance = IPv4(address)
+                ipv4_instance = IPv4(f"{address}/{combo}")
                 ipv4_output_result(address, combo)
                 subnetting_output_result(address, combo)
                 if(ipv4_instance.multicast() == True):
                     label.config(text="Đây là địa chỉ Multicast", fg="green")
+                elif(ipv4_instance.loopback() == True):
+                    label.config(text="Đây là địa chỉ Loopback", fg="green")
                 elif(ipv4_instance.private() == True):
                     label.config(text="Đây là địa chỉ Private", fg="green")
                 else:
@@ -169,60 +168,6 @@ def check_input_ipv4(address, label, example, combo):
     func.toogle_frame(subnetting_output_frame, 3, 1, color)
     ipv6_output_frame.grid_forget()
 
-#xử lý nhập của ipv6
-def ipv6_input(ipv6_frame):
-    example = "Example: 2001:db8:85a3::8a2e:370:7334"
-    #phần nhập của IPv6
-    func.info_user_label(ipv6_frame, "IPv6 Address", 0, 0)
-    input_ipv6_entry = tk.Entry(ipv6_frame, fg="grey", font=("Helvetica", 10, "italic"), width=37)
-    input_ipv6_entry.insert(0, example)
-    input_ipv6_entry.bind("<FocusIn>", lambda event: func.handle_entry(event, "click", input_ipv6_entry, example))
-    input_ipv6_entry.bind('<FocusOut>', lambda event: func.handle_entry(event, "leave", input_ipv6_entry, example))
-    input_ipv6_entry.grid(row=1, column=0)
-
-    #lựa chọn subnet mask
-    func.info_user_label(ipv6_frame, "Prefix Length", 0, 1)
-    choices = list(range(1,129))
-    prefix_length_combobox = ttk.Combobox(ipv6_frame, values=choices, width=7, font=font_normal)
-    prefix_length_combobox.grid(row=1, column=1, sticky="w")
-    prefix_length_combobox.set(64)
-    
-    #xử lý lỗi nhập dữ liệu và phát hiện địa chỉ
-    error_ipv6_label = tk.Label(ipv6_frame, text="", font=font_normal)
-
-    #xử lý dữ liệu bằng button
-    handle_button = tk.Button(ipv6_frame, text='Xử lý dữ liệu', font=font_label, command=lambda: check_input_ipv6(input_ipv6_entry.get(), error_ipv6_label, example, prefix_length_combobox.get()))
-    handle_button.grid(row=3, column=0, columnspan=2, sticky="ew")
-
-    #xử lí padding của các phần tử trong ipv4_input_frame
-    for widget in ipv6_frame.winfo_children():
-        widget.grid_configure(padx=5, pady=3)
-
-    error_ipv6_label.grid_forget()
-
-#kiểm tra kết quả của ipv6
-def check_input_ipv6(address, label, example, combo):
-    label.grid(row=2, column=0, columnspan=2, sticky="w")
-    label.grid_configure(padx=5, pady=3)
-
-    if(address == example):
-        label.config(text="Địa chỉ IP không được để trống", fg="red")
-    else:
-        if(func.check_ipv6(address) == True):
-            ipv6_instance = IPv6(f"{address}/{combo}")
-            ipv6_ouput_result(address, combo)
-            if(ipv6_instance.multicast()):
-                label.config("Đây là địa chỉ Multicast", fg="green")
-            else:
-                label.config(text="Địa chỉ hợp lệ", fg="green")
-        else:
-            label.config(text="Địa chỉ IP không hợp lệ xin mời nhập lại", fg="red")
-
-    color = label.cget("foreground")
-    func.toogle_frame(ipv6_output_frame, 2, 1, color)
-    ipv4_output_frame.grid_forget()
-    subnetting_output_frame.grid_forget()
-
 #hiển thị kết quả
 def ipv4_output(output_frame):
     #Global các biến
@@ -232,44 +177,45 @@ def ipv4_output(output_frame):
     global host_max_label, host_max_binary_label
     global broadcast_label, broadcast_binary_label
     global class_result_label, ipv6_result_label
+    font_color = "green"
 
     #Thông tin của IP
-    info_label = tk.Label(output_frame, text="THÔNG TIN CỦA MẠNG", font=("Sonata", 15, "bold"), bg="#013DC4", fg="white")
+    info_label = tk.Label(output_frame, text="THÔNG TIN CỦA MẠNG", font=("Sonata", 15, "bold"), bg="#0766AD", fg="white")
     info_label.grid(row=0, column=0, columnspan=3, sticky="ew")
 
     #IP Address
     func.info_user_label(output_frame, "IP Address:", 1, 0)
     address_label = tk.Label(output_frame, text="", fg="blue", font=font_normal)
     address_label.grid(row=1, column=1, sticky="w")
-    address_binary_label = tk.Label(output_frame, text="", fg="green", font=font_normal)
+    address_binary_label = tk.Label(output_frame, text="", fg=font_color, font=font_normal)
     address_binary_label.grid(row=1, column=2)
 
     #Network
     func.info_user_label(output_frame, "Network:", 2, 0)
     network_label = tk.Label(output_frame, text="", fg="blue", font=font_normal)
     network_label.grid(row=2, column=1, sticky="w")
-    network_binary_label = tk.Label(output_frame, text="", fg="green", font=font_normal)
+    network_binary_label = tk.Label(output_frame, text="", fg=font_color, font=font_normal)
     network_binary_label.grid(row=2, column=2)
 
     #Host Min
     func.info_user_label(output_frame, "Host MIN:", 3, 0)
     host_min_label = tk.Label(output_frame, text="", fg="blue", font=font_normal)
     host_min_label.grid(row=3, column=1, sticky="w")
-    host_min_binary_label = tk.Label(output_frame, text="", fg="green", font=font_normal)
+    host_min_binary_label = tk.Label(output_frame, text="", fg=font_color, font=font_normal)
     host_min_binary_label.grid(row=3, column=2)
 
     #Host Max
     func.info_user_label(output_frame, "Host MAX", 4, 0)
     host_max_label = tk.Label(output_frame, text="", fg="blue", font=font_normal)
     host_max_label.grid(row=4, column=1, sticky="w")
-    host_max_binary_label = tk.Label(output_frame, text="", fg="green", font=font_normal)
+    host_max_binary_label = tk.Label(output_frame, text="", fg=font_color, font=font_normal)
     host_max_binary_label.grid(row=4, column=2)
 
     #Broadcast
     func.info_user_label(output_frame, "Broadcast:", 5, 0)
     broadcast_label = tk.Label(output_frame, text="", fg="blue", font=font_normal)
     broadcast_label.grid(row=5, column=1, sticky="w")
-    broadcast_binary_label = tk.Label(output_frame, text="", fg="green", font=font_normal)
+    broadcast_binary_label = tk.Label(output_frame, text="", fg=font_color, font=font_normal)
     broadcast_binary_label.grid(row=5, column=2)
 
     #Class IP
@@ -300,32 +246,91 @@ def ipv4_output_result(address, combo):
 
     #Hiển thị kết quả của dữ liệu
     address_label.config(text=address)
-    address_binary_label.config(text=func.ipv4_to_binary(address))
+    address_binary_label.config(text=IPv4(ipv4_address).ipv4_to_binary())
     
     network_label.config(text=network_ip)
-    network_binary_label.config(text=func.ipv4_to_binary(network_ip))
+    network_binary_label.config(text=IPv4(network_ip).ipv4_to_binary())
 
     host_min_label.config(text=host_min_ip)
-    host_min_binary_label.config(text=func.ipv4_to_binary(host_min_ip))
+    host_min_binary_label.config(text=IPv4(host_min_ip).ipv4_to_binary())
 
     host_max_label.config(text=host_max_ip)
-    host_max_binary_label.config(text=func.ipv4_to_binary(host_max_ip))
+    host_max_binary_label.config(text=IPv4(host_max_ip).ipv4_to_binary())
 
     broadcast_label.config(text=broadcast_ip)
-    broadcast_binary_label.config(text=func.ipv4_to_binary(broadcast_ip))
+    broadcast_binary_label.config(text=IPv4(broadcast_ip).ipv4_to_binary())
 
     class_result_label.config(text=class_ip)
     
     ipv6_result_label.config(text=ipv6)
+
+#xử lý nhập của ipv6
+def ipv6_input(ipv6_frame):
+    example = "Example: 2001:db8:85a3::8a2e:370:7334"
+    #phần nhập của IPv6
+    func.info_user_label(ipv6_frame, "IPv6 Address", 0, 0)
+    input_ipv6_entry = tk.Entry(ipv6_frame, fg="grey", font=("Helvetica", 10, "italic"), width=37)
+    input_ipv6_entry.insert(0, example)
+    input_ipv6_entry.bind("<FocusIn>", lambda event: func.handle_entry(event, "click", input_ipv6_entry, example))
+    input_ipv6_entry.bind('<FocusOut>', lambda event: func.handle_entry(event, "leave", input_ipv6_entry, example))
+    input_ipv6_entry.grid(row=1, column=0)
+
+    #lựa chọn subnet mask
+    func.info_user_label(ipv6_frame, "Prefix Length", 0, 1)
+    choices = list(range(1,129))
+    prefix_length_combobox = ttk.Combobox(ipv6_frame, values=choices, width=7, font=font_normal)
+    prefix_length_combobox.grid(row=1, column=1, sticky="w")
+    prefix_length_combobox.set(64)
+    
+    #xử lý lỗi nhập dữ liệu và phát hiện địa chỉ
+    error_ipv6_label = tk.Label(ipv6_frame, text="", font=font_normal)
+
+    #xử lý dữ liệu bằng button
+    handle_button = tk.Button(ipv6_frame, text='Xử lý dữ liệu', cursor="hand2", font=font_label, command=lambda: check_input_ipv6(input_ipv6_entry.get(), error_ipv6_label, example, prefix_length_combobox.get()))
+    handle_button.grid(row=3, column=0, columnspan=2, sticky="ew")
+
+    #xử lí padding của các phần tử trong ipv4_input_frame
+    for widget in ipv6_frame.winfo_children():
+        widget.grid_configure(padx=5, pady=3)
+
+    error_ipv6_label.grid_forget()
+
+#kiểm tra kết quả của ipv6
+def check_input_ipv6(address, label, example, combo):
+    label.grid(row=2, column=0, columnspan=2, sticky="w")
+    label.grid_configure(padx=5, pady=3)
+
+    if(address == example):
+        label.config(text="Địa chỉ IP không được để trống", fg="red")
+    else:
+        if(func.check_ipv6(address) == True):
+            ipv6_instance = IPv6(f"{address}/{combo}")
+            ipv6_ouput_result(address, combo)
+            if(ipv6_instance.multicast()):
+                label.config("Đây là địa chỉ Multicast", fg="green")
+            elif(ipv6_instance.anycast()):
+                label.config("Đây là địa chỉ Anycast", fg="green")
+            elif(ipv6_instance.unicast()):
+                label.config("Đây là địa chỉ Unicast", fg="green")
+            else:
+                label.config(text="Địa chỉ hợp lệ", fg="green")
+        else:
+            label.config(text="Địa chỉ IP không hợp lệ xin mời nhập lại", fg="red")
+
+    color = label.cget("foreground")
+    func.toogle_frame(ipv6_output_frame, 2, 1, color)
+    ipv4_output_frame.grid_forget()
+    subnetting_output_frame.grid_forget()
 
 #hiển thị frame của ipv6
 def ipv6_output(output_frame):
     global ipv6_address_label
     global ipv6_full_label
     global ipv6_network_label
+    global ipv6_binary_label
 
     #thông tin của IP
-    info_label = tk.Label(output_frame, text="THÔNG TIN CỦA MẠNG IPV6", font=("Sonata", 15, "bold"), bg="#013DC4", fg="white", width=30)
+    info_label = tk.Label(output_frame, text="THÔNG TIN CỦA MẠNG IPV6", font=("Sonata", 15, "bold"), bg="#0766AD", fg="white", width=30)
     info_label.grid(row=0, column=0, columnspan=2, sticky="ew")
 
     # địa chỉ IPv6
@@ -343,6 +348,11 @@ def ipv6_output(output_frame):
     ipv6_network_label = tk.Label(output_frame, text="", fg="blue", font=font_normal)
     ipv6_network_label.grid(row=3, column=1, sticky="w")
 
+    # Dạng nhị phân của địa chỉ IPv6
+    func.info_user_label(output_frame, "Binary:", 4, 0)
+    ipv6_binary_label = tk.Label(output_frame, text="", fg="green", font=font_normal)
+    ipv6_binary_label.grid(row=4, column=1, sticky="w")
+
     # xử lý padding của các phần tử
     for widget in output_frame.winfo_children():
         widget.grid_configure(padx=3, pady=3)
@@ -353,6 +363,7 @@ def ipv6_ouput_result(address, combo):
     ipv6_instance = IPv6(ipv6_address)
     network_ip = ipv6_instance.network()
     full_ip = ipv6_instance.full_ipv6()
+    binary_ip = ipv6_instance.ipv6_to_binary()
 
     #hiển thị kết quả dữ liệu
     ipv6_address_label.config(text=address)
@@ -361,24 +372,13 @@ def ipv6_ouput_result(address, combo):
 
     ipv6_network_label.config(text=network_ip)
 
+    ipv6_binary_label.config(text=binary_ip)
+
 #hiển thị subnetting
 def subnetting_output(subnet_frame):
     #thông tin của subnetting
-    title_label = tk.Label(subnet_frame, text="SUBNETTING", font=("Sonata", 15, "bold"))
-    title_label.grid(row=0, column=0, columnspan=3, sticky="ew")
-
-    #Network
-    func.info_subnetting_label(subnet_frame, "Network", 1, 0)
-
-    #Host min - Host max
-    func.info_subnetting_label(subnet_frame, "Host min - Host max", 1, 1)
-
-    #Broadcast
-    func.info_subnetting_label(subnet_frame, "Broadcast", 1, 2)
-
-    #xử lí padding của các phần tử trong  main subnetting
-    for widget in subnet_frame.winfo_children():
-        widget.grid_configure(padx=24, pady=3)
+    title_label = tk.Label(subnet_frame, text="SUBNETTING", font=("Sonata", 15, "bold"), bg="#0766AD", fg="white")
+    title_label.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
     
 #hiển thị kết quả của subnetting
 def subnetting_output_result(address, combo):
@@ -387,32 +387,49 @@ def subnetting_output_result(address, combo):
     #lấy danh sách các địa chỉ subnet cần để subnetting
     subnets = ipv4_instance.subnetting()
 
-    #xóa các label cũ
-    for widget in sup_subnetting_frame.winfo_children():
-        widget.destroy()
-
-    #hiển thị kết quả của subnetting
-    row = 0
+    func.info_user_label(subnetting_output_frame, f"Subnet được chỉ với địa chỉ IP {address} với subnet mask /{combo}", 1, 0)
+    note_label = tk.Label(subnetting_output_frame, text="Lưu ý** dải địa chỉ cuối cùng không được sửa dụng vì để quảng bá mạng", font=font_label, fg="red")
+    note_label.grid(row=2, column=0, sticky="w", padx=5, pady=5)
+    # Thêm dữ liệu vào bảng
+    data = []
     for subnet in subnets:
         ipv4_subnetting = Subnet(subnet)
         network_ip = ipv4_subnetting.network()
         broadcast_ip = ipv4_subnetting.broadcast()
         host_min_ip = ipv4_subnetting.host_min()
         host_max_ip = ipv4_subnetting.host_max()
+        
+        #thêm dữ liệu vào mảng
+        data.append((f"{network_ip}", f"{host_min_ip} - {host_max_ip}", f"{broadcast_ip}"))
 
-        func.info_subnetting_label(sup_subnetting_frame, network_ip, row, 0)
-        func.info_subnetting_label(sup_subnetting_frame, f"{host_min_ip} - {host_max_ip}", row, 1)
-        func.info_subnetting_label(sup_subnetting_frame, broadcast_ip, row, 2)
-        row += 1
+    # Tạo thanh tiêu đề theme
+    style = ttk.Style()
+    style.configure("Treeview.Heading", font=font_label)
+    data_style = ttk.Style()
+    data_style.configure("Data.Treeview", font=font_label)
 
-    #xử lí padding của các phần tử trong support subnetting
-    for widget in sup_subnetting_frame.winfo_children():
-        widget.grid_configure(padx=24, pady=3)
+    # Tạo bảng dữ liệu
+    tree = ttk.Treeview(subnetting_output_frame, columns=("Network", "Host", "Broadcast"), show="headings", height=len(data))
+    tree.grid(row=3, column=0, padx=5, pady=5)
+    tree.heading("Network", text="Network", anchor="w")
+    tree.heading("Host", text="Host Min - Host Max", anchor="w")
+    tree.heading("Broadcast", text="Broadcast", anchor="w")
+    tree.column("Network", width=120)
+    tree.column("Host", width=220)
+    tree.column("Broadcast", width=120)
 
+    for i, row in enumerate(data):
+        tree.insert("", "end", values=row, tags=("evenrow" if i % 2 == 0 else "oddrow"))
+        tree.tag_configure("evenrow" if i % 2 == 0 else "oddrow", **data_style.configure("Data.Treeview"))
+        tree.tag_configure("evenrow", background="white")
+        tree.tag_configure("oddrow", background="#f0f0f0")
+
+#chương trình chính
 def main():
+    global app
     app = tk.Tk()
     app.title("CHƯƠNG TRÌNH TÌM CÁC LOẠI ĐỊA CHỈ IP")
-    app.geometry("750x600")
+    app.geometry("850x600")
     scrollbar_window(app)
     app.mainloop()
     
