@@ -24,6 +24,19 @@ class IPv6:
             )
         except ipaddress.AddressValueError:
             return False
+
+    def link_local(self):
+        return self.ipv6.ip.is_link_local
+    
+    def site_local(self):
+        return self.ipv6.ip.is_site_local
+        
+    def anycast(self):
+        ip_address = str(self.ipv6.ip).split(":")
+
+        if(str(ip_address[0]) == "fe08"):
+            return True
+        return False
     
     def ipv6_to_binary(self):
         binary_ipv6 = bin(int(self.ipv6))[2:]

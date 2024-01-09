@@ -49,11 +49,30 @@ class IPv4:
     def private(self):
         return self.ipv4.network.is_private
     
+    def is_network(self):
+        ip_binary = "".join(self.ipv4_to_binary().split("."))
+        network_address = ip_binary[self.ipv4.network.prefixlen:]
+
+        for bit in network_address:
+            if(int(bit) != 0):
+                return False
+        return True
+
+    def is_broadcast(self):
+        ip_binary = "".join(self.ipv4_to_binary().split("."))
+        broadcast_address = ip_binary[self.ipv4.network.prefixlen:]
+
+        for bit in broadcast_address:
+            if(int(bit) != 1):
+                return False
+        return True
+
     def ipv4_to_binary(self):
-        components = map(int, str(self.ipv4.ip).split('.'))
-        binary_components = [bin(component)[2:].zfill(8) for component in components]
-        binary_address = '.'.join(binary_components)
-        return binary_address
+        ip_address = str(self.ipv4.ip).split('.')
+        ip_binary = []
+        for ip in ip_address:
+            ip_binary.append(format(int(ip), '08b'))
+        return ".".join(ip_binary)
     
     def class_ipv4(self):
         cls_ip = int(self.ipv4.network.network_address.exploded.split(".")[0])

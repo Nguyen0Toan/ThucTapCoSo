@@ -156,6 +156,10 @@ def check_input_ipv4(address, label, example, combo):
                     label.config(text="Đây là địa chỉ Loopback", fg="green")
                 elif(ipv4_instance.private() == True):
                     label.config(text="Đây là địa chỉ Private", fg="green")
+                elif(ipv4_instance.is_network() == True):
+                    label.config(text="Đây là địa chỉ Network", fg="green")
+                elif(ipv4_instance.is_broadcast() == True):
+                    label.config(text="Đây là địa chỉ Broadcast", fg="green")
                 else:
                     label.config(text="Địa chỉ hợp lệ", fg="green")
             else:
@@ -310,6 +314,12 @@ def check_input_ipv6(address, label, example, combo):
                 label.config(text="Đây là địa chỉ Multicast", fg="green")
             elif(ipv6_instance.unicast()):
                 label.config(text="Đây là địa chỉ Unicast", fg="green")
+            elif(ipv6_instance.link_local()):
+                label.config(text="Đây là địa chỉ Link local", fg="green")
+            elif(ipv6_instance.site_local()):
+                label.config(text="Đây là địa chỉ Site local", fg="green")
+            elif(ipv6_instance.anycast()):
+                label.config(text="Đây là địa chỉ Anycast", fg="green")
             else:
                 label.config(text="Địa chỉ hợp lệ", fg="green")
         else:
@@ -381,11 +391,12 @@ def subnetting_output(subnet_frame):
 #hiển thị kết quả của subnetting
 def subnetting_output_result(address, combo):
     ipv4_address = f"{address}/{combo}"
+    network_address = IPv4(ipv4_address).network()
     ipv4_instance = Subnet(ipv4_address)
     #lấy danh sách các địa chỉ subnet cần để subnetting
     subnets = ipv4_instance.subnetting()
 
-    func.info_user_label(subnetting_output_frame, f"Subnet được chỉ với địa chỉ IP {address} với subnet mask /{combo}", 1, 0)
+    func.info_user_label(subnetting_output_frame, f"Subnet được chỉ với địa chỉ IP {network_address} với subnet mask /{combo}", 1, 0)
     note_label = tk.Label(subnetting_output_frame, text="Lưu ý** dải địa chỉ cuối cùng không được sửa dụng vì để quảng bá mạng", font=font_label, fg="red")
     note_label.grid(row=2, column=0, sticky="w", padx=5, pady=5)
     # Thêm dữ liệu vào bảng
