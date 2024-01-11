@@ -48,8 +48,10 @@ def main_window(main_frame):
     #documents frame
     documents_frame = tk.LabelFrame(main_frame, text="Tài Liệu Tham Khảo", font=font_label, bg="#008170", fg="white")
     documents_frame.grid(row=0, column=0, rowspan=3, sticky="nsew")
-    documents_input_frame = tk.Frame(documents_frame)
-    documents_input_frame.grid(row=0, column=0, sticky="nw", padx=10, pady=20)
+    documents_ipv4_frame = tk.LabelFrame(documents_frame, text="Tài liệu IPv4", font=font_label)
+    documents_ipv4_frame.grid(row=0, column=0, sticky="nw", padx=10, pady=10)
+    documents_ipv6_frame = tk.LabelFrame(documents_frame, text="Tài liệu IPv6", font=font_label)
+    documents_ipv6_frame.grid(row=1, column=0, sticky="nw", padx=10, pady=10)
     
     #ipv4 input, output frame
     ipv4_input_frame = tk.LabelFrame(main_frame, text="IPv4 Input", font=font_label)
@@ -70,7 +72,7 @@ def main_window(main_frame):
     ipv6_output_frame.grid_forget()
     subnetting_output_frame.grid_forget()
 
-    documents_input(documents_input_frame)
+    documents_input(documents_ipv4_frame, documents_ipv6_frame)
     ipv4_input(ipv4_input_frame)
     ipv6_input(ipv6_input_frame)
     ipv4_output(ipv4_output_frame)
@@ -78,19 +80,29 @@ def main_window(main_frame):
     subnetting_output(subnetting_output_frame)
 
 #xử lý tài liệu tham khảo
-def documents_input(documents_frame):
+def documents_input(documents_ipv4, documents_ipv6):
     #file dữ liệu
-    file_path = "information.txt"
-    data_list = func.read_file(file_path)
+    data_list_ipv4 = func.read_file("information_ipv4.txt")
+    data_list_ipv6 = func.read_file("information_ipv6.txt")
 
-    #tạo các label chứa thông tin
-    for i, data in enumerate(data_list):
+    #tạo các label chứa thông tin ipv4
+    for i, data in enumerate(data_list_ipv4):
         key = data.split(":")[0].strip()
-        label = tk.Label(documents_frame, text=f"{key}", font=font_normal, fg="#007bff", cursor="hand2", anchor="w", width=25)
+        label = tk.Label(documents_ipv4, text=f"{key}", font=font_normal, fg="#007bff", cursor="hand2", anchor="w", width=25)
         label.grid(row=i, column=0, sticky="w")
-        label.bind("<Button-1>", lambda event, index=i, data_file=data_list, title=key: show_documentation(event, index, data_file, title))
+        label.bind("<Button-1>", lambda event, index=i, data_file=data_list_ipv4, title=key: show_documentation(event, index, data_file, title))
 
-    for widget in documents_frame.winfo_children():
+    for widget in documents_ipv4.winfo_children():
+        widget.grid_configure(padx=3, pady=5)
+
+    #tạo các label chứa thông tin ipv6
+    for i, data in enumerate(data_list_ipv6):
+        key = data.split(":")[0].strip()
+        label = tk.Label(documents_ipv6, text=f"{key}", font=font_normal, fg="#007bff", cursor="hand2", anchor="w", width=25)
+        label.grid(row=i, column=0, sticky="w")
+        label.bind("<Button-1>", lambda event, index=i, data_file=data_list_ipv6, title=key: show_documentation(event, index, data_file, title))
+
+    for widget in documents_ipv6.winfo_children():
         widget.grid_configure(padx=3, pady=5)
 
 #sự kiện hiển thị nội dung tài liệu
@@ -150,16 +162,25 @@ def check_input_ipv4(address, label, example, combo):
                 ipv4_instance = IPv4(f"{address}/{combo}")
                 ipv4_output_result(address, combo)
                 subnetting_output_result(address, combo)
-                if(ipv4_instance.multicast() == True):
-                    label.config(text="Đây là địa chỉ Multicast", fg="green")
-                elif(ipv4_instance.loopback() == True):
-                    label.config(text="Đây là địa chỉ Loopback", fg="green")
-                elif(ipv4_instance.private() == True):
-                    label.config(text="Đây là địa chỉ Private", fg="green")
-                elif(ipv4_instance.is_network() == True):
-                    label.config(text="Đây là địa chỉ Network", fg="green")
+                if(ipv4_instance.private() or ipv4_instance.multicast() == True):
+                    if(ipv4_instance.private() == True):
+                        label.config(text="Đây là địa chỉ Private", fg="green")
+                        if(ipv4_instance.is_broadcast() == True):
+                            label.config(text="Đây là địa chỉ Private và là địa chỉ Broadcast", fg="green")
+                        elif(ipv4_instance.is_network() == True):
+                            label.config(text="Đây là địa chỉ Private và là địa chỉ Network", fg="green")
+                    if(ipv4_instance.multicast() == True):
+                        label.config(text="Đây là địa chỉ Multicast", fg="green")
+                        if(ipv4_instance.is_broadcast() == True):
+                            label.config(text="Đây là địa chỉ Multicast và là địa chỉ Broadcast", fg="green")
+                        elif(ipv4_instance.is_network() == True):
+                            label.config(text="Đây là địa chỉ Multicast và là địa chỉ Network", fg="green")
                 elif(ipv4_instance.is_broadcast() == True):
                     label.config(text="Đây là địa chỉ Broadcast", fg="green")
+                elif(ipv4_instance.is_network() == True):
+                    label.config(text="Đây là địa chỉ Network", fg="green")
+                elif(ipv4_instance.loopback() == True):
+                    label.config(text="Đây là địa chỉ Loopback", fg="green")
                 else:
                     label.config(text="Địa chỉ hợp lệ", fg="green")
             else:

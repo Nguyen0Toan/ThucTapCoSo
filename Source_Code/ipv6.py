@@ -34,7 +34,7 @@ class IPv6:
     def anycast(self):
         ip_address = str(self.ipv6.ip).split(":")
 
-        if(str(ip_address[0]) == "fe08"):
+        if(str(ip_address[0]) == "fe80"):
             return True
         return False
     
